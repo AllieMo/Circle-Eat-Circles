@@ -1,0 +1,212 @@
+<!-- Circles Game for David's Soft Dev class 2016-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cirles Eat Circles - Software Development</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <!--    out styles will be internal until we need to move them to an external file -->
+  <style type="text/css">
+    html, body {margin: 5px;}
+    canvas {display: block;}
+    
+    body {
+      background-image: url("http://www.planwallpaper.com/static/images/518071-background-hd_xO1TwRc.jpg");
+    }
+    
+    #game {
+      margin-left: auto;
+      margin-right: auto;
+      width: 1000px;
+      height: 500px;
+      background-color: rgb(225,127,250);
+      border-radius: 10px;
+    }
+    
+    h2 {
+      width: 200px;
+      height: 200px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      display: table;
+      font-family: "Arial Black";
+      background-color: purple;
+      color: white;
+      border-radius: 120px;
+      font-size: 40px;
+      box-shadow: 10px 10px 10px #7E6143;
+
+    }
+
+    header {
+      text-align: center;
+      box-shadow: 10px 10px 10px;
+      width: 250px;
+
+    }
+  </style>
+</head>
+<body>
+  <header>
+  <h1>It's a Circle Eat Circle World</h1>
+  </header>
+    <div id="game"> 
+        <canvas id="myCanvas"></canvas>
+    </div>
+</body>
+</html>
+<!--    our link to the javascript file that will control the game actions -->
+<script type="text/javascript">
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d"),
+w = canvas.width = 1000,
+h = canvas.height = 500;
+var gameOn=1;
+var s = new Image();
+    s.src="Final/startingSplash.png";
+    s.onload = function () {ctx.drawImage(s,0,0,w,h);}
+//set players red and blue starting values
+xRed = 60; 
+yRed = 150;
+xBlue = w-60;
+yBlue = 150;
+rRed = rBlue = 7;
+
+//little black circles to eat in object circ
+var circ = {
+    // set up properties
+    _x: null,
+    _y: null,
+    _xSpeed: null,
+    _ySpeed: null,
+    _radius: null,
+    _visible: true,
+
+    //Create method new circle object with given starting position and speed
+    create: function (x, y, xSpeed, ySpeed) {
+        var obj = Object.create(this);
+        obj._x = x;
+        obj._y = y;
+        obj._xSpeed=xSpeed;
+        obj._ySpeed=ySpeed;
+        obj._radius=Math.random()*6+2;
+        return obj;
+    },
+
+    //Update method to give new x and y of the circle based on the speed.
+    update: function () {
+        this._x+=this._xSpeed;
+        this._y+=this._ySpeed;
+    },
+}; //end circle object variable
+
+var a = new Image();
+a.src="Final/redwins.png";
+
+var a1 = new Image ();
+a1.src="Final/bluewins.png";
+
+// set up number of circles and array filled with each circles properties
+var circCount=25;
+var circArray=[];
+for (var i = 0; i < circCount; i++) {
+  circArray.push(circ.create(i*30+w/2-circCount*30/2,40,3-Math.random()*6,3-Math.random()*6));
+} // end for loading array object
+
+var keysDown = [];
+//Listens to app for keyboard actions
+//take keycode out of array (not being held down anymore)
+addEventListener("keydown", function (e) {keysDown[e.keyCode] = true;}, false); 
+//take keycode out of array (not being held down anymore)
+addEventListener("keyup", function (e) {delete keysDown[e.keyCode];}, false); 
+
+function playerUpdate(){
+  ctx.beginPath();
+  ctx.fillStyle="#f00";
+  ctx.arc(xRed,yRed,rRed,0,2*Math.PI);
+  ctx.fill(); 
+  ctx.beginPath();
+  ctx.fillStyle="#00f";
+  ctx.arc(xBlue,yBlue,rBlue,0,2*Math.PI);
+  ctx.fill(); 
+  //player two hodling down a key using the array keysDown
+  if (87 in keysDown) {yRed -=5;} // P2 holding down the w key
+  if (83 in keysDown) {yRed +=5;} // P2 holding down (key: s)
+  if (65 in keysDown) {xRed -=5;} // P2 holding down (key: a)
+  if (68 in keysDown) {xRed +=5;} // P2 holding down (key: d)
+
+  // player one hodling key down
+  if (37 in keysDown) {xBlue -=5;} // P2 holding down (key: left arrow)
+  if (38 in keysDown) {yBlue -=5;} // P2 holding down (key: up arrow)
+  if (39 in keysDown) {xBlue +=5;} // P2 holding down (key: right arrow)
+  if (40 in keysDown) {yBlue +=5;} // P2 holding down (key: down arrow)
+
+  //collision with each other
+
+  if (Math.sqrt(Math.pow(xBlue-xRed,2) + Math.pow(yRed-yBlue,2))<rBlue+rRed)
+    if (dRed > dBlue) {
+      gameOn=0;
+      {ctx.drawImage(a,0,0,w,h);}
+    }
+    else if (dBlue > dRed) {
+      gameOn=0;
+      {ctx.drawImage(a1,0,0,w,h);}
+    }
+
+} // player update done
+
+
+// circle properties _x and _y are updated and check for edges and collisions
+function circles() {
+ for (var i = 0; i < circCount; i++) {
+  if (circArray[i]._visible){
+    circArray[i].update(); 
+    ctx.beginPath();
+    ctx.fillStyle="#000";
+    ctx.arc(circArray[i]._x,circArray[i]._y,circArray[i]._radius,0,2*Math.PI);
+    ctx.fill();
+    dBlue = rBlue+circArray[i]._radius;
+    dRed = rRed+circArray[i]._radius; 
+        //collision conditionals
+        if (Math.sqrt(Math.pow(xBlue-circArray[i]._x, 2) + Math.pow(yBlue-circArray[i]._y, 2))<dBlue && circArray[i]._visible) {
+            rBlue+=5;
+            circArray[i]._visible=false;
+        };
+        if (Math.sqrt(Math.pow(xRed-circArray[i]._x, 2) + Math.pow(yRed-circArray[i]._y, 2))<dRed+5 && circArray[i]._visible) {
+            rRed+=5;
+            circArray[i]._visible=false
+        };
+        //side walls conditionals
+        if (circArray[i]._x>w || circArray[i]._x<0) {circArray[i]._xSpeed = -circArray[i]._xSpeed;}
+        if (circArray[i]._y>h || circArray[i]._y<0) {circArray[i]._ySpeed = -circArray[i]._ySpeed;}
+        //makes red and blue circles bounce off walls
+        if (xRed>w-dRed-7) {xRed=w-dRed-7}
+        if (xRed<dRed-7) {xRed=dRed-7}
+        if (yRed>h-dRed-7) {yRed=h-dRed-7}
+        if (yRed<dRed-7) {yRed=dRed-7}
+        if (xBlue>w-dBlue-7) {xBlue=w-dBlue-7}
+        if (xBlue<dBlue-7) {xBlue=dBlue-7}
+        if (yBlue>h-dBlue-7) {yBlue=h-dBlue-7}
+        if (yBlue<dBlue-7) {yBlue=dBlue-7}
+
+  }// end visible check
+ }//end for loop
+}// end circlesUpdate
+
+// collision result functions
+function redEats(i){
+
+}
+function blueEats(i){
+
+}
+function main(){
+  ctx.clearRect(0,0,w,h);
+  playerUpdate();
+  circles();
+} // close main
+var FPS = 30;
+if (gameOn = 1) {
+  setInterval(function() {main();}, 1000/FPS);
+}
+</script>
